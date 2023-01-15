@@ -2,13 +2,13 @@ import asyncio
 from base64 import b64encode
 from collections import defaultdict
 from datetime import datetime, timedelta, date
+from os import environ
 from pprint import pprint
 
 import aiohttp
 
-
-TOGGL_API_KEY = ...
-REDMINE_API_KEY = ...
+TOGGL_API_KEY = environ["TOGGL_API_KEY"]
+REDMINE_API_KEY = environ["REDMINE_API_KEY"]
 REDMINE_ACTIVITY_ID = 9
 
 today = datetime.now().date()
@@ -38,6 +38,7 @@ def group_by_task_and_date(data) -> defaultdict[str, defaultdict[int, int]]:
 
 def secs_to_hours(secs: int) -> float:
     hours = secs / 60 / 60
+    # hours = math.ceil(hours * 10) / 10
     hours = round(hours, 2)
     return hours
 

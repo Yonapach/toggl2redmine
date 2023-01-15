@@ -1,15 +1,26 @@
 # toggl2redmine
-Script to synchronize toggle track and redmine
+Script to synchronize toggle track and redmine. By default, it syncs for today.
 
-### Before launching
-Fill in
-```python
-TOGGL_API_KEY = ...
-REDMINE_API_KEY = ...
+## Installation
+Create .env file and set values
+```bash
+touch .env
 ```
-If needed, you can change the date in the code (by default it syncs to today)
+```
+TOGGL_API_KEY=
+REDMINE_API_KEY=
+```
+Build service
+```bash
+docker compose build
+```
 
+## Usage
+
+```bash
+docker compose up
+```
 
 ### todo
-- [ ] Add docker
+- [x] Add docker
 - [ ] Add command line arguments (date range)

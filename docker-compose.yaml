@@ -1,0 +1,8 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: toggl2redmine
+    build: .
+    env_file:
+      - ./.env
