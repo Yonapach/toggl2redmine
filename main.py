@@ -11,7 +11,9 @@ TOGGL_API_KEY = environ["TOGGL_API_KEY"]
 REDMINE_API_KEY = environ["REDMINE_API_KEY"]
 REDMINE_ACTIVITY_ID = 9
 
-today = datetime.now().date()
+DAYS_OFFSET = 0
+
+today = datetime.now().date() - timedelta(days=DAYS_OFFSET)
 
 
 async def main():
