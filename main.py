@@ -2,18 +2,14 @@ import asyncio
 from base64 import b64encode
 from collections import defaultdict
 from datetime import datetime, timedelta, date
-from os import environ
+from typing import Any
 
 import aiohttp
 from tabulate import tabulate
 
-TOGGL_API_KEY = environ["TOGGL_API_KEY"]
-REDMINE_API_KEY = environ["REDMINE_API_KEY"]
-REDMINE_ACTIVITY_ID = 9
+from config import settings
 
-DAYS_OFFSET = 0
-
-today = datetime.now().date() - timedelta(days=DAYS_OFFSET)
+today = datetime.now().date() - timedelta(days=settings.days_offset)
 
 
 async def main():
@@ -26,7 +22,7 @@ async def main():
 
 async def get_toggl_entries(session: aiohttp.ClientSession, d_start: date, d_end: date) -> dict:
     url = f"https://api.track.toggl.com/api/v9/me/time_entries"
-    token = b64encode(f"{TOGGL_API_KEY}:api_token".encode()).decode("ascii")
+    token = b64encode(f"{settings.toggl_api_key}:api_token".encode()).decode("ascii")
     headers = {"content-type": "application/json", "Authorization": f"Basic {token}"}
     params = {"start_date": str(d_start), "end_date": str(d_end)}
 
@@ -46,7 +42,7 @@ def group_by_task_and_date(data) -> defaultdict[str, defaultdict[int, int]]:
     return res
 
 
-async def add_costs(session: aiohttp.ClientSession, data) -> list[dict]:
+async def add_costs(session: aiohttp.ClientSession, data) -> tuple[Any]:
     tasks = []
     for spent_on, time_by_task in data.items():
         for task_id, secs in time_by_task.items():
@@ -56,17 +52,16 @@ async def add_costs(session: aiohttp.ClientSession, data) -> list[dict]:
 
 
 async def add_cost(session: aiohttp.ClientSession, task_id: int, secs: int, spent_on: str) -> dict:
-    url = "https://redmine.sbps.ru/time_entries.json"
-    headers = {"content-type": "application/json", "X-Redmine-API-Key": REDMINE_API_KEY}
+    headers = {"content-type": "application/json", "X-Redmine-API-Key": settings.redmine_api_key}
     json = {
         "time_entry": {
             "issue_id": task_id,
             "hours": secs_to_hours(secs),
-            "activity_id": REDMINE_ACTIVITY_ID,
+            "activity_id": settings.redmine_activity_id,
             "spent_on": spent_on,
         }
     }
-    async with session.post(url, headers=headers, json=json) as response:
+    async with session.post(f"{settings.redmine_url}/time_entries.json", headers=headers, json=json) as response:
         return await response.json()
 
 
@@ -78,13 +73,12 @@ def secs_to_hours(secs: int) -> float:
 
 
 def print_report(data) -> None:
-    table = []
-    for r in data:
-        entry = r["time_entry"]
-        table.append((entry["issue"]["id"], entry["hours"], entry["spent_on"]))
-
-    table.sort(key=lambda i: (i[2], i[1]), reverse=True)
-
+    entries = (row["time_entry"] for row in data)
+    table = sorted(
+        ((entry["issue"]["id"], entry["hours"], entry["spent_on"]) for entry in entries),
+        key=lambda i: (i[2], i[1]),
+        reverse=True,
+    )
     print(
         tabulate(
             table,
