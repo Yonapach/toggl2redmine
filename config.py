@@ -4,10 +4,18 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     toggl_api_key: str
-    redmine_api_key: str
-    redmine_activity_id: int
-    redmine_url: HttpUrl
+    round_costs: bool = False
     days_offset: int = 0
 
 
+class RedmineConfig(BaseSettings):
+    api_key: str
+    activity_id: int
+    url: HttpUrl
+
+    class Config:
+        env_prefix = "redmine_"
+
+
 settings = Settings()
+redmine_config = RedmineConfig()

@@ -5,9 +5,10 @@ from datetime import datetime, timedelta, date
 from typing import Any
 
 import aiohttp
+import math
 from tabulate import tabulate
 
-from config import settings
+from config import settings, redmine_config
 
 today = datetime.now().date() - timedelta(days=settings.days_offset)
 
@@ -52,23 +53,27 @@ async def add_costs(session: aiohttp.ClientSession, data) -> tuple[Any]:
 
 
 async def add_cost(session: aiohttp.ClientSession, task_id: int, secs: int, spent_on: str) -> dict:
-    headers = {"content-type": "application/json", "X-Redmine-API-Key": settings.redmine_api_key}
+    headers = {"content-type": "application/json", "X-Redmine-API-Key": redmine_config.api_key}
     json = {
         "time_entry": {
             "issue_id": task_id,
             "hours": secs_to_hours(secs),
-            "activity_id": settings.redmine_activity_id,
+            "activity_id": redmine_config.activity_id,
             "spent_on": spent_on,
         }
     }
-    async with session.post(f"{settings.redmine_url}/time_entries.json", headers=headers, json=json) as response:
+    async with session.post(f"{redmine_config.url}/time_entries.json", headers=headers, json=json) as response:
         return await response.json()
 
 
 def secs_to_hours(secs: int) -> float:
     hours = secs / 60 / 60
-    # hours = math.ceil(hours * 10) / 10
-    hours = round(hours, 2)
+
+    if settings.round_costs:
+        hours = math.ceil(hours * 10) / 10
+    else:
+        hours = round(hours, 2)
+
     return hours
 
 
