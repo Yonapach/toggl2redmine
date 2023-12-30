@@ -2,8 +2,8 @@
 
 Script to synchronize Toggl Track and Redmine
 
-* Project is redmine task id
-* Description is comment
+* Toggl project is Redmine task_id
+* Toggl description is Redmine comment
 
 ### Installation
 
@@ -25,6 +25,7 @@ REDMINE_ACTIVITY_ID=
 ```dotenv
 TOGGL_DAYS_OFFSET=0
 REDMINE_ROUND_COSTS=false
+REDMINE_DEFAULT_COMMENT='Выполнение требований задачи'
 ```
 
 #### Build the service

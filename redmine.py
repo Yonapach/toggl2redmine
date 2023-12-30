@@ -34,22 +34,29 @@ class Redmine:
 
     async def add_costs(self, data: dict[str, dict[int, dict[str, int]]]) -> None:
         tasks = [
-            asyncio.create_task(self.add_cost(task_id, secs, spent_on, comment))
-            for spent_on, details_by_task in data.items()
-            for task_id, details in details_by_task.items()
-            for comment, secs in details.items()
+            asyncio.create_task(
+                self._add_cost(
+                    task_id=task_id,
+                    hours=self._secs_to_hours(secs),
+                    spent_on=spent_on,
+                    comments=comment or self.config.default_comment,
+                )
+            )
+            for spent_on, tasks in data.items()
+            for task_id, comments in tasks.items()
+            for comment, secs in comments.items()
         ]
         responses = await asyncio.gather(*tasks)
         self._print_report(responses)
 
-    async def add_cost(self, task_id: int, secs: int, spent_on: str, comment: str) -> RedmineTimeEntryResponse:
+    async def _add_cost(self, task_id: int, hours: float, spent_on: str, comments: str) -> RedmineTimeEntryResponse:
         json = {
             "time_entry": {
                 "issue_id": task_id,
-                "hours": self._secs_to_hours(secs),
+                "hours": hours,
                 "activity_id": self.config.activity_id,
                 "spent_on": spent_on,
-                "comments": comment,
+                "comments": comments,
             }
         }
         async with self.session.post(

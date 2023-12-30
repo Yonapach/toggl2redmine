@@ -16,6 +16,7 @@ class RedmineConfig(BaseSettings):
     activity_id: int
     url: HttpUrl
     round_costs: bool = False
+    default_comment: str = "Выполнение требований задачи"
 
     class Config:
         env_prefix = "redmine_"
