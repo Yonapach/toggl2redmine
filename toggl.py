@@ -1,16 +1,17 @@
 from base64 import b64encode
 from collections import defaultdict
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date
 from typing import TYPE_CHECKING
 
-from aiohttp import ClientSession
+from config import base_config
 
 if TYPE_CHECKING:
+    from aiohttp import ClientSession
     from config import TogglConfig
 
 
 class Toggl:
-    def __init__(self, config: "TogglConfig", session: ClientSession):
+    def __init__(self, config: "TogglConfig", session: "ClientSession"):
         self.config = config
         self.session = session
 
@@ -30,9 +31,11 @@ class Toggl:
     async def entries(self) -> dict[str, dict[int, dict[str, int]]]:
         projects = await self.projects
         entries = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-        day = datetime.now().date() - timedelta(days=self.config.days_offset)
 
-        for entry in await self._get_entries(day):
+        for entry in await self._get_entries(base_config.day):
+            if entry["stop"] is None:
+                raise Exception("There are running time entries")
+
             d_end = entry["stop"][:10]
             duration = entry["duration"]
             project_id = entry["project_id"]
